@@ -1,0 +1,376 @@
+/*
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ *
+ */
+//Accounting.js
+
+//Actions specific to the Accounting section
+
+var EC = protractor.ExpectedConditions;
+var createLedger = $("a[href='/accounting/create']");
+var accountIdentifierInput = $("fims-id-input[controlname='identifier'] input");
+var accountNameInput = $("fims-text-input[controlname='name'] input");
+var descriptionInput = $("input[formcontrolname='description']");
+var accountBalanceInput = $("fims-text-input[controlname='balance'] input");
+var primaryButton = $$(".mat-raised-button.mat-primary");
+var button = $$(".mat-raised-button.mat-accent");
+var radioButtonAsset = $$("mat-radio-button").get(0);
+var radioButtonEquity = $$("mat-radio-button").get(2);
+var radioButtonExpense = $$("mat-radio-button").get(3);
+var radioButtonRevenue = $$("mat-radio-button").get(4);
+
+//journal entries
+var accountSearchInputField = $("fims-text-input[controlname='account'] input");
+var transactionIdentifierInput = $("fims-id-input[controlname='transactionIdentifier'] input");
+var transactionTypeInput = $("fims-transaction-type-select[formcontrolname='transactionType'] input");
+var debitAccountInput = $$("fims-account-select[formcontrolname='accountNumber'] input").get(0);
+var creditAccountInput = $$("fims-account-select[formcontrolname='accountNumber'] input").get(1);
+var debitAmountInput = $$("fims-text-input[controlname='amount'] input").get(0);
+var creditAmountInput = $$("fims-text-input[controlname='amount'] input").get(1);
+
+module.exports = {
+    goToAccountingViaSidePanel: function() {
+        browser.wait(EC.visibilityOf($$("a[href='/accounting']").first()), 3000);
+        $$("a[href='/accounting']").first().click();$$("a[href='/accounting']").first().click();
+    },
+    verifyCardHasTitleGeneralLedger: function() {
+        form_title=$("fims-layout-card-over .mat-toolbar-row div").getText();
+        expect(form_title).toEqual("General Ledger");
+    },
+    clickButtonOrLinkCreateNewLedger: function(){
+        browser.wait(EC.visibilityOf(createLedger), 5000);
+        createLedger.click();
+    },
+    goToTransactionTypes: function() {
+        browser.wait(EC.visibilityOf($("a[href='/accounting/transactiontypes']")), 3000);
+        $("a[href='/accounting/transactiontypes']").click();
+    },
+    goToChartOfAccounts: function() {
+        browser.wait(EC.visibilityOf($("a[href='/accounting/chartOfAccounts']")), 3000);
+        $("a[href='/accounting/chartOfAccounts']").click();
+    },
+    goToJournalEntries: function() {
+        browser.wait(EC.visibilityOf($("a[href='/accounting/journalEntries']")), 3000);
+        $("a[href='/accounting/journalEntries']").click();
+    },
+    goToChequeClearing: function() {
+        browser.wait(EC.visibilityOf($("a[href='/accounting/cheques']")), 3000);
+        $("a[href='/accounting/cheques']").click();
+        browser.sleep(1000);
+    },
+    goToTrialBalance: function() {
+        browser.wait(EC.visibilityOf($("a[href='/accounting/trialBalance']")), 3000);
+        $("a[href='/accounting/trialBalance']").click();
+    },
+    goToPayrolls: function() {
+        browser.wait(EC.visibilityOf($("a[href='/accounting/payrolls']")), 3000);
+        $("a[href='/accounting/payrolls']").click();
+    },
+    viewAccountEntriesForAccount: function(accountIdentifier){
+        link = "/accounting/accounts/detail/" + accountIdentifier + "/entries";
+        browser.wait(EC.visibilityOf($('a[href="'+ link + '"]')));
+        $('a[href="'+ link + '"]').click();
+        browser.sleep(1000);
+    },
+    goToTasksForAccount: function(accountIdentifier){
+        link = "/accounting/accounts/detail/" + accountIdentifier + "/tasks";
+        browser.wait(EC.visibilityOf($('a[href="'+ link + '"]')));
+        $('a[href="'+ link + '"]').click();
+        browser.sleep(1000);
+    },
+    goToSubledgersForAccount: function(accountIdentifier){
+        link = "/accounting/ledgers/detail/" + accountIdentifier + "/ledgers";
+        browser.wait(EC.visibilityOf($('a[href="'+ link + '"]')));
+        $('a[href="'+ link + '"]').click();
+        browser.sleep(1000);
+    },
+    clickLinkShowForAccountWithName: function(name) {
+        browser.wait(EC.invisibilityOf($("div[class='mat-padding'] h3")), 5000);
+        browser.sleep(1000);
+        browser.wait(EC.textToBePresentInElement($$("tbody tr .td-data-table-cell").last(), "SHOW"), 5000);
+        $$('tbody tr').filter(function(elem, index) {
+            return elem.$$(".td-data-table-cell").get(1).getText().then(function(text) {
+                return text === name;
+            });
+        }).$$(".td-data-table-cell").last().click();
+    },
+    clickLinkShowForAccountWithIdentifier: function(identifier) {
+        browser.wait(EC.invisibilityOf($("div[class='mat-padding'] h3")), 5000);
+        browser.sleep(1000);
+        browser.wait(EC.textToBePresentInElement($$("tbody tr .td-data-table-cell").last(), "SHOW"), 5000);
+        $$('tbody tr').filter(function(elem, index) {
+            return elem.$$(".td-data-table-cell").get(0).getText().then(function(text) {
+                return text === identifier;
+            });
+        }).$$(".td-data-table-cell").last().click();
+    },
+    verifyAccountStatus: function(expectedStatus){
+        browser.wait(EC.visibilityOf($("fims-state-display")), 2000);
+        expect($("fims-state-display .mat-list-text .mat-line").getText().then(function(text){
+                return text === expectedStatus;
+            })).toBe(true);
+    },
+    verifyAccountInfo: function(heading, value) {
+        expect($$(".mat-list-item .mat-list-text").filter(function (elem, index) {
+            return elem.$("h3").getText().then(function (text) {
+                return text === heading;
+            }).$(p).getText().then(function (text) {
+                return text === value;
+            }).toBe(true);
+        }));
+    },
+    verifyTransactionTypeForRow: function(type, row) {
+        browser.wait(EC.visibilityOf($("table tbody")), 3000);
+        expect($$("table tbody tr").get(row - 1).$$(".td-data-table-cell").get(1).getText()).toEqual(type);
+    },
+    verifyTransactionMessageForRow: function(message, row) {
+        browser.wait(EC.visibilityOf($("table tbody")), 3000);
+        expect($$("table tbody tr").get(row - 1).$$(".td-data-table-cell").get(2).getText()).toEqual(message);
+    },
+    verifyTransactionAmountForRow: function(amount, row) {
+        browser.wait(EC.visibilityOf($("table tbody")), 3000);
+        expect($$("table tbody tr").get(row - 1).$$(".td-data-table-cell").get(3).getText()).toEqual(amount);
+    },
+    verifyTransactionBalanceForRow: function(balance, row) {
+        browser.wait(EC.visibilityOf($("table tbody")), 3000);
+        expect($$("table tbody tr").get(row - 1).$$(".td-data-table-cell").get(4).getText()).toEqual(balance);
+    },
+    clickCreateNewAccountInLedger: function(ledger){
+        link = "/accounting/ledgers/detail/" + ledger + "/accounts/create";
+        browser.wait(EC.visibilityOf($('a[href="'+ link + '"]')));
+        $('a[href="'+ link + '"]').click();
+    },
+    enterTextIntoAccountIdentifierInputField: function(text) {
+        browser.wait(EC.visibilityOf(accountIdentifierInput), 5000);
+        accountIdentifierInput.click().sendKeys(text);
+    },
+    enterTextIntoAccountNameInputField: function(text) {
+        browser.wait(EC.visibilityOf(accountNameInput), 5000);
+        accountNameInput.click().sendKeys(text);
+    },
+    enterTextIntoAccountBalanceInputField: function(text) {
+        browser.wait(EC.visibilityOf(accountBalanceInput), 5000);
+        accountBalanceInput.click().sendKeys(text);
+    },
+    clickButtonCreateAccount: function(){
+        primaryButton.filter(function(elem, index) {
+            return elem.$("span").getText().then(function(text) {
+                return text === "CREATE ACCOUNT";
+            });
+        }).click();
+    },
+    verifyRadioAssetToBeSelected: function() {
+        expect(radioButtonAsset.getAttribute("class")).toMatch("mat-radio-checked");
+    },
+    verifyRadioAssetToBeDisabled: function() {
+        expect(radioButtonAsset.getAttribute("class")).toMatch("mat-radio-disabled");
+    },
+    verifyRadioRevenueToBeSelected: function() {
+        expect(radioButtonRevenue.getAttribute("class")).toMatch("mat-radio-checked");
+    },
+    verifyRadioExpenseToBeSelected: function() {
+        expect(radioButtonExpense.getAttribute("class")).toMatch("mat-radio-checked");
+    },
+    verifyRadioEquityToBeSelected: function() {
+        expect(radioButtonEquity.getAttribute("class")).toMatch("mat-radio-checked");
+    },
+
+    //Journal entries
+    enterTextIntoSearchAccountInputField: function(account) {
+        browser.wait(EC.visibilityOf(accountSearchInputField), 5000);
+        accountSearchInputField.clear().click().sendKeys(account);
+    },
+    clickSearchButton: function(){
+       $$("button").filter(function(elem, index) {
+            return elem.$("span mat-icon").getText().then(function(text) {
+                return text === "search";
+            });
+        }).click();
+       browser.sleep(1000);
+    },
+    verifyFirstJournalEntry: function(transactionType, transactionAmount){
+        browser.sleep(500);
+        expect($$("fims-layout-card-over .mat-list-item .mat-list-text p").first().getText().then(function(text){
+            return text === transactionType;
+        })).toBe(true);
+        expect($$("fims-layout-card-over .mat-list-item .mat-list-text p").get(1).getText().then(function(text){
+            return text === transactionAmount;
+        })).toBe(true);
+    },
+    verifySecondJournalEntry: function(transactionType, transactionAmount){
+        expect($$("fims-layout-card-over .mat-list-item .mat-list-text p").get(2).getText().then(function(text){
+            return text === transactionType;
+        })).toBe(true);
+        expect($$("fims-layout-card-over .mat-list-item .mat-list-text p").get(3).getText().then(function(text){
+            return text === transactionAmount;
+        })).toBe(true);
+    },
+    clickSecondJournalEntry: function(){
+        $$("fims-layout-card-over mat-nav-list a").get(1).click();
+        browser.sleep(500);
+    },
+    clickThirdJournalEntry: function(){
+        $$("fims-layout-card-over mat-nav-list a").get(2).click();
+        browser.sleep(500);
+    },
+    clickJournalEntry: function(number){
+        $$("fims-layout-card-over mat-nav-list a").get(number-1).click();
+        browser.sleep(500);
+    },
+    verifyThirdJournalEntry: function(transactionType, transactionAmount){
+        browser.sleep(500);
+        expect($$("fims-layout-card-over .mat-list-item .mat-list-text p").get(4).getText().then(function(text){
+            return text === transactionType;
+        })).toBe(true);
+        expect($$("fims-layout-card-over .mat-list-item .mat-list-text p").get(5).getText().then(function(text){
+            return text === transactionAmount;
+        })).toBe(true);
+    },
+    verifyFourthJournalEntry: function(transactionType, transactionAmount){
+        browser.sleep(500);
+        expect($$("fims-layout-card-over .mat-list-item .mat-list-text p").get(6).getText().then(function(text){
+            return text === transactionType;
+        })).toBe(true);
+        expect($$("fims-layout-card-over .mat-list-item .mat-list-text p").get(7).getText().then(function(text){
+            return text === transactionAmount;
+        })).toBe(true);
+    },
+    verifyFifthJournalEntry: function(transactionType, transactionAmount){
+        browser.sleep(500);
+        expect($$("fims-layout-card-over .mat-list-item .mat-list-text p").get(8).getText().then(function(text){
+            return text === transactionType;
+        })).toBe(true);
+        expect($$("fims-layout-card-over .mat-list-item .mat-list-text p").get(9).getText().then(function(text){
+            return text === transactionAmount;
+        })).toBe(true);
+    },
+    verifyAccountHasBeenDebitedWithAmountInRow: function(account, amount, row) {
+        browser.wait(EC.visibilityOf($("table tbody")), 3000);
+        expect($$("table tbody tr").get(row - 1).$$(".td-data-table-cell").get(0).getText()).toEqual(account);
+        expect($$("table tbody tr").get(row - 1).$$(".td-data-table-cell").get(2).getText()).toEqual(amount);
+    },
+    verifyAccountHasBeenCreditedWithAmountInRow: function(account, amount, row) {
+        browser.wait(EC.visibilityOf($("table tbody")), 3000);
+        expect($$("table tbody tr").get(row - 1).$$(".td-data-table-cell").get(1).getText()).toEqual(account);
+        expect($$("table tbody tr").get(row - 1).$$(".td-data-table-cell").get(2).getText()).toEqual(amount);
+    },
+    verifyAccountHasBeenCreditedWithAmount: function(account, amount) {
+        browser.wait(EC.visibilityOf($("table tbody")), 3000);
+        expect($$("table tbody tr .td-data-table-cell").filter(function(elem, index) {
+            return elem.getText().then(function(text) {
+                return text === account;
+            });
+        }).first().element(by.xpath("..")).$$(".td-data-table-cell").last().getText().then(function(text){
+            return text == amount;
+        })).toBe(true);
+    },
+    verifyAccountHasBeenDebitedWithAmount: function(account, amount) {
+        browser.wait(EC.visibilityOf($("table tbody")), 3000);
+        expect($$("table tbody tr .td-data-table-cell").filter(function(elem, index) {
+            return elem.getText().then(function(text) {
+                return text === account;
+            });
+        }).first().element(by.xpath("..")).$$(".td-data-table-cell").last().getText().then(function(text){
+            return text == amount;
+        })).toBe(true);
+    },
+    verifyClerkForJournalEntryIs: function (clerk){
+        expect($$("mat-card .mat-list-text h3").filter(function(elem, index) {
+            return elem.getText().then(function(text) {
+                return text === "Clerk";
+            });
+        }).first().element(by.xpath("..")).$("p").getText().then(function(text){
+            return text == clerk;
+        })).toBe(true);
+    },
+    verifyMessageForJournalEntryIs: function (message){
+        expect($$("mat-card .mat-list-text h3").filter(function(elem, index) {
+            return elem.getText().then(function(text) {
+                return text === "Message";
+            });
+        }).first().element(by.xpath("..")).$("p").getText().then(function(text){
+            return text == message;
+        })).toBe(true);
+    },
+    verifyNoteForJournalEntryIs: function (note){
+        expect($$("mat-card .mat-list-text h3").filter(function(elem, index) {
+            return elem.getText().then(function(text) {
+                return text === "Note";
+            });
+        }).first().element(by.xpath("..")).$("p").getText().then(function(text){
+            console.log(text);
+            return text == note;
+        })).toBe(true);
+    },
+    //tasks for accounts
+    clickButtonToExecuteAction: function(action){
+        $$(".mat-raised-button.mat-accent span").filter(function(elem, index) {
+            return elem.getText().then(function(text){
+                return text === action;
+            });
+        }).first().click();
+    },
+
+    //journal entries
+    clickButtonAddJournalEntry: function() {
+        browser.sleep(1000);
+        browser.wait(EC.elementToBeClickable($("fims-fab-button a[href='/accounting/journalEntries/create']")), 5000);
+        $("fims-fab-button a[href='/accounting/journalEntries/create']").click();
+    },
+    enterTextIntoTransactionIdentifierInputField: function(text) {
+        browser.wait(EC.visibilityOf(transactionIdentifierInput), 5000);
+        transactionIdentifierInput.click().sendKeys(text);
+    },
+    enterTextIntoTransactionTypeInputFieldAndSelectMatchingEntry: function(text) {
+        transactionTypeInput.click().clear().sendKeys(text);
+        browser.wait(EC.visibilityOf($(".mat-option")), 5000);
+        $$(".mat-option").first().click();
+    },
+    clickButtonContinue: function(){
+        button.filter(function(elem, index) {
+            return elem.$("span").getText().then(function(text) {
+                return text === "CONTINUE";
+            });
+        }).click();
+    },
+    enterTextIntoDebitAccountNameInputField: function(text) {
+        browser.wait(EC.elementToBeClickable(debitAccountInput), 5000);
+        debitAccountInput.click().sendKeys(text);
+    },
+    enterTextIntoDebitAmountInputField: function(text) {
+        browser.wait(EC.visibilityOf(debitAmountInput), 5000);
+        debitAmountInput.click().sendKeys(text);
+    },
+    enterTextIntoCreditAccountNameInputField: function(text) {
+        browser.wait(EC.visibilityOf(creditAccountInput), 5000);
+        creditAccountInput.click().sendKeys(text);
+    },
+    enterTextIntoCreditAmountInputField: function(text) {
+        browser.wait(EC.visibilityOf(creditAmountInput), 5000);
+        creditAmountInput.click().sendKeys(text);
+    },
+    clickButtonCreateJournalEntry: function(){
+        browser.wait(EC.elementToBeClickable(primaryButton.get(0)), 5000);
+        primaryButton.filter(function(elem, index) {
+            return elem.$("span").getText().then(function(text) {
+                return text === "CREATE JOURNAL ENTRY";
+            });
+        }).click();
+    },
+};
